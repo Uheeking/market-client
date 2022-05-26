@@ -1,1 +1,4 @@
-export const API_URL = process.env.NODE_ENV === 'production'? 'https://market-client-uheeking.vercel.app' : 'http//localhost:8080'
+export const API_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://market-server-uheeking.herokuapp.com"
+    : "http//localhost:8080";
