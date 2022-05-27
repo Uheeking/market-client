@@ -1,40 +1,55 @@
-import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import { useEffect, useState } from "react";
 import "./index.css";
 import { API_URL } from "../config/constants";
 import dayjs from "dayjs";
-import { message, Button } from "antd";
+import { Button, message, Spin } from "antd";
+import ProductCard from "../components/productCard";
 
 function ProductPage() {
-  // 도메인에서 받은 id를 파라미터로 저장
   const { id } = useParams();
   const [product, setProduct] = useState(null);
-
+  const [products, setProducts] = useState([]);
   const getProduct = () => {
     axios
       .get(`${API_URL}/products/${id}`)
-      .then(function (result) {
+      .then((result) => {
         setProduct(result.data.product);
       })
-      .catch(function (error) {
+      .catch((error) => {
         console.error(error);
       });
   };
-
-  useEffect(function () {
+  const getRecommendations = () => {
+    axios
+      .get(`${API_URL}/products/${id}/recommendation`)
+      .then((result) => {
+        setProducts(result.data.products);
+        console.log(result.data.products);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
+  useEffect(() => {
     getProduct();
-  }, []);
+    getRecommendations();
+  }, [id]);
 
   if (product === null) {
-    return <h1>상품 정보를 받고 있습니다...</h1>;
+    return (
+      <div style={{ textAlign: "center", paddingTop: 32 }}>
+        <Spin size="large" />
+      </div>
+    );
   }
 
   const onClickPurchase = () => {
     axios
       .post(`${API_URL}/purchase/${id}`)
       .then((result) => {
-        message.info("구매가 완료되었습니다.");
+        message.info("구매가 완료되었습니다");
         getProduct();
       })
       .catch((error) => {
@@ -53,7 +68,7 @@ function ProductPage() {
       </div>
       <div id="contents-box">
         <div id="name">{product.name}</div>
-        <div id="price">{product.price}</div>
+        <div id="price">{product.price}원</div>
         <div id="createdAt">
           {dayjs(product.createdAt).format("YYYY년 MM월 DD일")}
         </div>
@@ -67,7 +82,17 @@ function ProductPage() {
         >
           재빨리 구매하기
         </Button>
-        <pre id="description">{product.description}</pre>
+        <div id="description-box">
+          <pre id="description">{product.description} </pre>
+        </div>
+        <div>
+          <h1>추천 상품</h1>
+          <div style={{ display: "flex", flexWrap: "wrap" }}>
+            {products.map((product, index) => {
+              return <ProductCard key={index} product={product} />;
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );

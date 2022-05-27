@@ -6,7 +6,7 @@ import axios from "axios";
 import {useHistory} from 'react-router-dom'
 
 function UploadPage() {
-  const [imageUrl, setimageUrl] = useState(null);
+  const [imageUrl, setImageUrl] = useState(null);
   const history = useHistory();
 
   const onSubmit = (values) => {
@@ -19,7 +19,7 @@ function UploadPage() {
       imageUrl : imageUrl
     }).then((result)=>{
       console.log(result);
-      history.replace('')
+      history.replace('/')
     }).catch((error)=>{
       console.error(error);
       message.error(`에러가 발생했습니다.${error.message}`)
@@ -32,7 +32,7 @@ function UploadPage() {
     if (info.file.status === "done") {
       const response = info.file.response;
       const imageUrl = response.imageUrl;
-      setimageUrl(imageUrl);
+      setImageUrl(imageUrl);
     }
   };
   return (
