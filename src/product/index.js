@@ -1,43 +1,42 @@
-import { useParams } from "react-router-dom";
-import axios from "axios";
-import { useEffect, useState } from "react";
+import React from "react";
 import "./index.css";
-import { API_URL } from "../config/constants";
+import axios from "axios";
+import { Link } from "react-router-dom";
 import dayjs from "dayjs";
-import { Button, message, Spin } from "antd";
+import relativeTime from "dayjs/plugin/relativeTime";
+import { API_URL } from "../config/constants.js";
+import { Carousel, Spin } from "antd";
+import "dayjs/locale/ko";
 import ProductCard from "../components/productCard";
 
-function ProductPage() {
-  const { id } = useParams();
-  const [product, setProduct] = useState(null);
-  const [products, setProducts] = useState([]);
-  const getProduct = () => {
-    axios
-      .get(`${API_URL}/products/${id}`)
-      .then((result) => {
-        setProduct(result.data.product);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  };
-  const getRecommendations = () => {
-    axios
-      .get(`${API_URL}/products/${id}/recommendation`)
-      .then((result) => {
-        setProducts(result.data.products);
-        console.log(result.data.products);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  };
-  useEffect(() => {
-    getProduct();
-    getRecommendations();
-  }, [id]);
+dayjs.extend(relativeTime);
+dayjs.locale("ko");
 
-  if (product === null) {
+function MainPage() {
+  const [products, setProducts] = React.useState([]);
+  const [banners, setBanners] = React.useState([]);
+  React.useEffect(function () {
+    axios
+      .get(`${API_URL}/products`)
+      .then(function (result) {
+        const products = result.data.products;
+        setProducts(products);
+      })
+      .catch(function (error) {
+        console.error("에러 발생 : ", error);
+      });
+
+    axios
+      .get(`${API_URL}/banners`)
+      .then((result) => {
+        const banners = result.data.banners;
+        setBanners(banners);
+      })
+      .catch((error) => {
+        console.error("에러 발생 : ", error);
+      });
+  }, []);
+  if (products.length === 0) {
     return (
       <div style={{ textAlign: "center", paddingTop: 32 }}>
         <Spin size="large" />
@@ -45,57 +44,27 @@ function ProductPage() {
     );
   }
 
-  const onClickPurchase = () => {
-    axios
-      .post(`${API_URL}/purchase/${id}`)
-      .then((result) => {
-        message.info("구매가 완료되었습니다");
-        getProduct();
-      })
-      .catch((error) => {
-        message.error(`에러가 발생했습니다. ${error.message}`);
-      });
-  };
-
   return (
     <div>
-      <div id="image-box">
-        <img src={`${API_URL}/${product.imageUrl}`} />
-      </div>
-      <div id="profile-box">
-        <img src="/images/icons/avatar.png" />
-        <span>{product.seller}</span>
-      </div>
-      <div id="contents-box">
-        <div id="name">{product.name}</div>
-        <div id="price">{product.price}원</div>
-        <div id="createdAt">
-          {dayjs(product.createdAt).format("YYYY년 MM월 DD일")}
-        </div>
-        <Button
-          id="purchase-button"
-          size="large"
-          type="primary"
-          danger
-          onClick={onClickPurchase}
-          disabled={product.soldout === 1}
-        >
-          재빨리 구매하기
-        </Button>
-        <div id="description-box">
-          <pre id="description">{product.description} </pre>
-        </div>
-        <div>
-          <h1>추천 상품</h1>
-          <div style={{ display: "flex", flexWrap: "wrap" }}>
-            {products.map((product, index) => {
-              return <ProductCard key={index} product={product} />;
-            })}
-          </div>
-        </div>
+      <Carousel autoplay autoplaySpeed={3000}>
+        {banners.map((banner, index) => {
+          return (
+            <Link to={banner.href}>
+              <div id="banner">
+                <img src={`${API_URL}/${banner.imageUrl}`} />
+              </div>
+            </Link>
+          );
+        })}
+      </Carousel>
+      <h1 id="product-headline">판매되는 상품들</h1>
+      <div id="product-list">
+        {products.map(function (product, index) {
+          return <ProductCard product={product} key={index} />;
+        })}
       </div>
     </div>
   );
 }
 
-export default ProductPage;
+export default MainPage;
